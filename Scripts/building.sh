@@ -21,17 +21,25 @@ fi
 # Navigate into the cloned repository
 cd "$repo_name" || { echo "Error: Repository directory not found."; exit 1; }
 
+# Copy .env file to the cloned repository root
+if [ -f "../$env_file_path" ]; then
+    cp "../$env_file_path" .env
+    echo "Copied .env file to $(pwd)"
+else
+    echo "Warning: .env file not found."
+fi
+
 # Navigate into subdirectory if provided
 if [ -n "$subdir" ]; then
     cd "$subdir" || { echo "Error: Subdirectory not found."; exit 1; }
-fi
-
-# Move .env file into the correct directory
-if [ -f "../$env_file_path" ]; then
-    mv "../$env_file_path" .env
-    echo "Moved .env file to $(pwd)"
-else
-    echo "Warning: .env file not found."
+    
+    # Copy .env file to the subdirectory
+    if [ -f "../../$env_file_path" ]; then
+        cp "../../$env_file_path" .env
+        echo "Copied .env file to $(pwd)"
+    else
+        echo "Warning: .env file not found in root."
+    fi
 fi
 
 # Create and activate virtual environment
@@ -50,12 +58,7 @@ if [ -f "requirements.txt" ]; then
 else
     echo "No requirements.txt found, skipping dependency installation."
 fi
-
-# Check if app.py exists
-if [ -f "app.py" ]; then
-    echo "Running app.py..."
-    python3 app.py
-else
-    echo "Error: app.py not found in the specified location."
-    exit 1
+if [ -n "$subdir" ]; then
+    cd ..
 fi
+cd ..

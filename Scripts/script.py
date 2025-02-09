@@ -2,6 +2,7 @@ import subprocess
 import os
 import time
 import requests
+from requests_url import send_request
 
 # Ask for GitHub repository URL
 repo_url = input("Enter the GitHub repository URL: ").strip()
@@ -20,17 +21,10 @@ if not os.path.exists(env_file_path):
 print(f"Using existing {env_file_path} file.")
 
 # Call the shell script and pass repo URL, subdir name
-subprocess.Popen(["./script.sh", repo_url, subdir, env_file_path])
+subprocess.run(["./building.sh", repo_url, subdir, env_file_path], check=True)
 
-# Wait for the Flask app to start
-time.sleep(300)  # Adjust this delay if needed
+# Run the app in another terminal
+process = subprocess.Popen(["./running.sh", repo_url, subdir], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+stdout, stderr = process.communicate()
 
-# Send POST request to Flask app
-api_url = "http://127.0.0.1:8001/generate-roadmap"
-data = {"input_value": "i want to learn python"}
-
-try:
-    response = requests.post(api_url, json=data)
-    print("Response from Flask app:", response.text)
-except requests.exceptions.ConnectionError:
-    print("Error: Could not connect to Flask app. Make sure it's running on port 8001.")
+send_request(repo_url=repo_url)
